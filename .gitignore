@@ -1,0 +1,5 @@
+/target/
+/dist/
+/data/
+*.mp4
+*.osr

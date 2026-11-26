@@ -43,6 +43,10 @@ pub struct Settings {
     pub performance: u8,
     #[serde(rename = "showScore")]
     pub show_score: bool,
+    #[serde(rename = "mapHitsoundVolume")]
+    pub map_hs_volume: u32,
+    #[serde(rename = "skinHitsoundVolume")]
+    pub skin_hs_volume: u32,
 }
 
 impl Default for Settings {
@@ -78,6 +82,8 @@ impl Default for Settings {
             show_results: true,
             performance: 1,
             show_score: true,
+            map_hs_volume: 100,
+            skin_hs_volume: 100,
         }
     }
 }

@@ -18,6 +18,8 @@ pub struct JobSettings {
     pub skin: Option<PathBuf>,
     pub skin_hd: bool,
     pub results: bool,
+    pub map_hs_volume: f32,
+    pub skin_hs_volume: f32,
     pub width: u32,
     pub height: u32,
     pub fps: u32,
@@ -204,6 +206,8 @@ pub fn prepare(
         },
         overlays: settings.overlays.clone(),
         results: settings.results,
+        map_hs_volume: settings.map_hs_volume,
+        skin_hs_volume: settings.skin_hs_volume,
         player: rep
             .as_ref()
             .map(|r| r.player.clone())

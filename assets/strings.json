@@ -131,7 +131,10 @@
     "perf_2": "High",
     "perf_tip": "How much RAM and CPU the export uses. Minimum: little memory, slower export. High: all CPU cores and more memory, fastest export.",
     "show_score": "Show score",
-    "fps_tip": "Frames per second of the video. Pick your monitor's refresh rate (60, 120, 144 or 240 Hz) so the notes move perfectly smoothly. More fps = longer export and a bigger file."
+    "fps_tip": "Frames per second of the video. Higher fps = smoother on any screen (240 or more hides the small stutters players add), but the export takes longer and the file is bigger. For YouTube use 60.",
+    "show_fps": "Show FPS and ms",
+    "map_hs_vol": "Map hitsounds",
+    "skin_hs_vol": "Skin sounds"
   },
   "es": {
     "language": "Idioma",
@@ -265,6 +268,9 @@
     "perf_2": "Alto",
     "perf_tip": "Cuánta RAM y procesador usa la exportación. Mínimo: poca memoria, exporta más lento. Alto: todos los núcleos y más memoria, exporta más rápido.",
     "show_score": "Mostrar puntuación",
-    "fps_tip": "Cuadros por segundo del video. Elige los Hz de tu monitor (60, 120, 144 o 240) para que las notas bajen perfectamente fluidas. Más fps = exporta más lento y el archivo pesa más."
+    "fps_tip": "Cuadros por segundo del video. Más fps = más fluido en cualquier pantalla (240 o más esconde los pequeños tirones de los reproductores), pero exporta más lento y el archivo pesa más. Para YouTube usa 60.",
+    "show_fps": "Mostrar FPS y ms",
+    "map_hs_vol": "Hitsounds mapa",
+    "skin_hs_vol": "Sonido skin"
   }
 }

@@ -546,9 +546,11 @@ impl App {
                 .map(PathBuf::from),
             skin_hd: self.s.skin_hd,
             results: self.s.show_results,
+            map_hs_volume: self.s.map_hs_volume.min(100) as f32 / 100.0,
+            skin_hs_volume: self.s.skin_hs_volume.min(100) as f32 / 100.0,
             width: match self.s.height { 720 => 1280, 480 => 854, _ => 1920 },
             height: match self.s.height { 720 => 720, 480 => 480, _ => 1080 },
-            fps: match self.s.video_fps { 120 | 144 | 240 => self.s.video_fps, _ => 60 },
+            fps: match self.s.video_fps { 120 | 144 | 165 | 240 | 300 | 360 | 480 => self.s.video_fps, _ => 60 },
             scroll: self.s.scroll.parse().unwrap_or(30.0),
             dim: if self.s.bg_dim >= 0 {
                 self.s.bg_dim.min(100) as f32 / 100.0
@@ -1198,7 +1200,7 @@ impl App {
             }
         }
 
-        let sec = r(16.0, 308.0, 456.0, 202.0);
+        let sec = r(16.0, 308.0, 456.0, 236.0);
         widgets::section(ui, sec, &self.t("s_folders"));
         let rows = [
             ("osu_dir", 34.0),
@@ -1551,9 +1553,19 @@ impl App {
             &results_t,
             enabled,
         );
-        widgets::note(ui, r(500.0, 238.0, 432.0, 18.0), &hint, hint_color);
+        let fps_t = self.t("show_fps");
+        let mut fps_on = self.overlays.iter().any(|o| o.id == "osu_fps" && o.enabled);
+        if widgets::toggle(ui, r(500.0, 232.0, 210.0, 24.0), &mut fps_on, &fps_t, enabled).clicked() {
+            for o in self.overlays.iter_mut().filter(|o| o.id == "osu_fps") {
+                o.enabled = fps_on;
+            }
+            crate::settings::save_overlays(&self.overlays);
+        }
+        if self.capturing.is_some() {
+            widgets::note(ui, r(720.0, 238.0, 212.0, 18.0), &hint, hint_color);
+        }
 
-        let sec = r(488.0, 278.0, 456.0, 232.0);
+        let sec = r(488.0, 278.0, 456.0, 266.0);
         widgets::section(ui, sec, &self.t("s_export"));
         let has_gpu = self
             .encoders
@@ -1679,12 +1691,12 @@ impl App {
             egui::UiBuilder::new().max_rect(r(664.0, 377.0, 52.0, 24.0)),
             |ui| {
                 ui.add_enabled_ui(enabled, |ui| {
-                    let mut f = match self.s.video_fps { 120 | 144 | 240 => self.s.video_fps, _ => 60 };
+                    let mut f = match self.s.video_fps { 120 | 144 | 165 | 240 | 300 | 360 | 480 => self.s.video_fps, _ => 60 };
                     egui::ComboBox::from_id_salt("fps")
                         .width(48.0)
                         .selected_text(f.to_string())
                         .show_ui(ui, |ui| {
-                            for v in [60u32, 120, 144, 240] {
+                            for v in [60u32, 120, 144, 165, 240, 300, 360, 480] {
                                 ui.selectable_value(&mut f, v, format!("{v} fps"));
                             }
                         })
@@ -1827,6 +1839,18 @@ impl App {
             },
         );
 
+        let vol_rows = [(500.0f32, self.t("map_hs_vol"), 0usize), (720.0f32, self.t("skin_hs_vol"), 1usize)];
+        for (x, label, which) in vol_rows {
+            widgets::label(ui, r(x, 510.0, 104.0, 26.0), &label, theme::TEXT, 13.0);
+            ui.allocate_new_ui(egui::UiBuilder::new().max_rect(r(x + (if which == 0 { 106.0 } else { 82.0 }), 512.0, if which == 0 { 100.0 } else { 130.0 }, 22.0)), |ui| {
+                ui.add_enabled_ui(enabled, |ui| {
+                    ui.spacing_mut().slider_width = if which == 0 { 60.0 } else { 88.0 };
+                    let v = if which == 0 { &mut self.s.map_hs_volume } else { &mut self.s.skin_hs_volume };
+                    ui.add(egui::Slider::new(v, 0..=100).suffix("%"));
+                });
+            });
+        }
+
         let preview_style = TriStyle {
             base: theme::BUTTON,
             triangles: true,
@@ -1837,7 +1861,7 @@ impl App {
         };
         if widgets::tri_button(
             ui,
-            r(16.0, 520.0, 928.0, 44.0),
+            r(16.0, 554.0, 928.0, 44.0),
             &self.t("preview"),
             None,
             &preview_style,
@@ -1848,21 +1872,21 @@ impl App {
         {
             self.start_preview();
         }
-        let sec = r(16.0, 574.0, 928.0, 122.0);
+        let sec = r(16.0, 608.0, 928.0, 88.0);
         widgets::section(ui, sec, &self.t("s_activity"));
         let status = match self.status_key {
             Some(k) => self.t(k),
             None => self.status.clone(),
         };
         ui.painter().text(
-            o + vec2(932.0, 591.0),
+            o + vec2(932.0, 625.0),
             Align2::RIGHT_CENTER,
             status,
             widgets::font(12.5),
             theme::DIM,
         );
         ui.allocate_new_ui(
-            egui::UiBuilder::new().max_rect(r(28.0, 606.0, 904.0, 76.0)),
+            egui::UiBuilder::new().max_rect(r(28.0, 638.0, 904.0, 44.0)),
             |ui| {
                 egui::ScrollArea::vertical()
                     .id_salt("log")

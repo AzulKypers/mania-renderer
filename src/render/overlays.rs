@@ -280,6 +280,7 @@ impl Scene {
                 "nowplaying_disk" => self.ov_disk(&mut p, cfg, t, snap),
                 "hitcount_bar" => self.ov_hitcount_bar(&mut p, cfg, t, snap),
                 "nps_chart" => self.ov_nps(&mut p, cfg, t),
+                "osu_fps" => self.ov_osu_fps(&mut p),
                 "mania_ingame" => {
                     let on = |k: &str| cfg.options.get(k).map(|v| v != "off").unwrap_or(true);
                     if on("hiterror") {
@@ -581,6 +582,21 @@ impl Scene {
                 oval(f, px + b, py - ry * 0.25, 3.5, 3.0, [246, 170, 186], None);
             }
         }
+    }
+
+    fn ov_osu_fps(&self, p: &mut P) {
+        let tx = &self.text;
+        let fps = self.opts.fps;
+        let ms = 1000.0 / fps.max(1) as f64;
+        let ms_text = if ms < 10.0 { format!("{ms:.1}ms").replace('.', ",") } else { format!("{:.0}ms", ms) };
+        let dark = [34, 34, 34, 255];
+        p.rect(5.0, 4.0, 90.0, 28.0, 4.0, [155, 204, 17, 255]);
+        let big = fps.to_string();
+        let big_w = tx.measure(&big, 20.0 * p.k, false) / p.k;
+        p.text(tx, &big, 12.0, 4.0, 80.0, 28.0, 20.0, dark, Align::Left, false);
+        p.text(tx, &format!("/{fps}fps"), 12.0 + big_w + 2.0, 10.0, 80.0, 24.0, 12.0, [70, 90, 20, 255], Align::Left, false);
+        p.rect(5.0, 37.0, 90.0, 29.0, 4.0, [164, 210, 26, 255]);
+        p.text(tx, &ms_text, 5.0, 37.0, 90.0, 29.0, 20.0, dark, Align::Center, false);
     }
 
     fn ov_kps(&self, p: &mut P, cfg: &OverlayConfig, t: f64) {

@@ -29,6 +29,8 @@ fn test_settings(args: &[String]) -> job::JobSettings {
         skin: args.get(1).filter(|s| !s.is_empty()).map(PathBuf::from),
         skin_hd: std::env::var("NOHD").is_err(),
         results: std::env::var("NORESULTS").is_err(),
+        map_hs_volume: std::env::var("MAPVOL").ok().and_then(|v| v.parse().ok()).unwrap_or(1.0),
+        skin_hs_volume: std::env::var("SKINVOL").ok().and_then(|v| v.parse().ok()).unwrap_or(1.0),
         width: std::env::var("W")
             .ok()
             .and_then(|v| v.parse().ok())
@@ -37,7 +39,7 @@ fn test_settings(args: &[String]) -> job::JobSettings {
             .ok()
             .and_then(|v| v.parse().ok())
             .unwrap_or(1080),
-        fps: 60,
+        fps: std::env::var("FPS").ok().and_then(|v| v.parse().ok()).unwrap_or(60),
         scroll: config.mania_speed.unwrap_or(30) as f64,
         dim: std::env::var("DIM")
             .ok()
@@ -224,6 +226,11 @@ fn main() {
                 prev = Some(d);
             }
             println!("cambios de velocidad: {jumps} de {} cuadros", scene.total_frames);
+        }
+        Some("audiotest") if args.len() >= 5 => {
+            let settings = test_settings(&args[4..]);
+            let scene = job::prepare(&source_of(&args[2]), &settings, &|_| {}).expect("prepare");
+            video::build_audio(&scene, 0, settings.skin.as_deref(), Path::new(&args[3])).expect("audio");
         }
         Some("findscore") if args.len() >= 5 => {
             let settings = test_settings(&args[4..]);

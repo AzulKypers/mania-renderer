@@ -183,6 +183,8 @@ fn hitsound_files(
     skin: &SkinFiles,
     fallback: &SkinFiles,
 ) -> Vec<(PathBuf, f32)> {
+    let map_k = scene.opts.map_hs_volume;
+    let skin_k = scene.opts.skin_hs_volume;
     let map = &scene.map;
     let note = &map.notes[note_index];
     let point = map.timing_at(note.time as f64);
@@ -215,7 +217,7 @@ fn hitsound_files(
     if !note.filename.is_empty() {
         let p = find_case_insensitive(&map.folder, &note.filename);
         if p.is_file() {
-            out.push((p, volume));
+            out.push((p, volume * map_k));
             return out;
         }
     }
@@ -227,6 +229,7 @@ fn hitsound_files(
     }
     for name in names {
         let mut found = None;
+        let mut from_map = false;
         if index > 0 {
             let custom = if index == 1 {
                 name.clone()
@@ -237,6 +240,7 @@ fn hitsound_files(
                 let p = find_case_insensitive(&map.folder, &format!("{custom}.{ext}"));
                 if p.is_file() {
                     found = Some(p);
+                    from_map = true;
                     break;
                 }
             }
@@ -248,7 +252,7 @@ fn hitsound_files(
             found = fallback.sound(&name);
         }
         if let Some(p) = found {
-            out.push((p, volume));
+            out.push((p, volume * if from_map { map_k } else { skin_k }));
         }
     }
     out

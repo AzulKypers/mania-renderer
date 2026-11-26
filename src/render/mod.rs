@@ -40,6 +40,8 @@ pub struct SceneOptions {
     pub player: String,
     pub played_at: String,
     pub replay_stats: Option<ReplayStats>,
+    pub map_hs_volume: f32,
+    pub skin_hs_volume: f32,
 }
 
 #[derive(Clone, Copy)]

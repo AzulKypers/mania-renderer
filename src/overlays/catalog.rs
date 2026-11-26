@@ -376,6 +376,14 @@ pub const CATALOG: &[OverlayDef] = &[
         ],
     },
     OverlayDef {
+        id: "osu_fps",
+        name: ["FPS and ms (osu!)", "FPS y ms (osu!)"],
+        size: (100.0, 70.0),
+        pos: (1815.0, 1006.0),
+        enabled: false,
+        options: &[],
+    },
+    OverlayDef {
         id: "nps_chart",
         name: ["NPS chart", "Gráfica de NPS"],
         size: (400.0, 400.0),

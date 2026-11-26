@@ -453,7 +453,7 @@ fn render_frame(scene: &Scene, index: u64, samples: u32, video: Option<&[u8]>) -
     }
     let mut sum: Vec<u16> = Vec::new();
     for s in 0..samples {
-        let offset = (s as f64 + 0.5) / samples as f64 - 0.5;
+        let offset = ((s as f64 + 0.5) / samples as f64 - 0.5) * 0.5;
         let frame =
             scene.render_with_video(scene.time_of_frame((index as f64 + offset).max(0.0)), video);
         let data = frame.data();
@@ -542,6 +542,15 @@ pub fn export(
         ]),
         Encoder::Qsv => cmd.args(["-preset", "medium", "-global_quality", "20"]),
     };
+    if matches!(encoder, Encoder::X264 | Encoder::Nvenc | Encoder::Amf | Encoder::Qsv) {
+        let max = ((w as f64 * h as f64 * fps as f64 * 0.19) as u64).clamp(4_000_000, 60_000_000);
+        cmd.args(["-maxrate", &max.to_string(), "-bufsize", &(max * 2).to_string()]);
+    }
+    if major >= 5 {
+        cmd.args(["-fps_mode", "cfr"]);
+    } else {
+        cmd.args(["-vsync", "cfr"]);
+    }
     cmd.args([
         "-color_primaries",
         "bt709",

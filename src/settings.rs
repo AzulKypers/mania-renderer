@@ -74,7 +74,7 @@ impl Default for Settings {
             video_fps: 60,
             story: true,
             bg_video: true,
-            smooth: false,
+            smooth: true,
             smooth_level: 0,
             auto: false,
             skin_hd: true,

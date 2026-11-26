@@ -392,8 +392,9 @@ pub const CATALOG: &[OverlayDef] = &[
                     ("240", ["240", "240"]),
                     ("480", ["480", "480"]),
                     ("1000", ["1000", "1000"]),
+                    ("unlimited", ["Unlimited", "Ilimitado"]),
                 ],
-                default: "240",
+                default: "1000",
             },
             OptionDef {
                 key: "spikes",

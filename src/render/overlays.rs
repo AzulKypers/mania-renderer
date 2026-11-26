@@ -586,13 +586,15 @@ impl Scene {
 
     fn ov_osu_fps(&self, p: &mut P, cfg: &OverlayConfig, t: f64) {
         let tx = &self.text;
-        let limit: f64 = cfg.options.get("limit").and_then(|v| v.parse().ok()).unwrap_or(240.0);
+        let unlimited = cfg.options.get("limit").map(String::as_str) == Some("unlimited");
+        let limit: f64 = if unlimited { 1600.0 } else { cfg.options.get("limit").and_then(|v| v.parse().ok()).unwrap_or(1000.0) };
         let spike_rate = match cfg.options.get("spikes").map(String::as_str).unwrap_or("few") {
             "none" => 0.0,
-            "many" => 1.0 / 400.0,
-            _ => 1.0 / 1800.0,
+            "many" => 0.6,
+            _ => 0.13,
         };
         let base = 1000.0 / limit.max(1.0);
+        let spike_rate = spike_rate * base / 1000.0;
         let hash = |k: i64, salt: u64| -> f64 {
             let mut x = (k as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15) ^ salt.wrapping_mul(0xD1B5_4A32_D192_ED03);
             x ^= x >> 31;
@@ -627,7 +629,12 @@ impl Scene {
                 spikes.push((age, ft / base));
             }
         }
-        let fps = if count > 0.0 { (1000.0 / (sum / count)).round().min(limit) } else { limit };
+        let fps = if count > 0.0 {
+            let f = (1000.0 / (sum / count)).round();
+            if unlimited { f } else { f.min(limit) }
+        } else {
+            limit
+        };
         let ratio = fps / limit;
         let fps_col = if ratio >= 0.95 {
             [155, 204, 17, 255]
@@ -655,7 +662,10 @@ impl Scene {
         let big = format!("{fps:.0}");
         let big_w = tx.measure(&big, 20.0 * p.k, false) / p.k;
         p.text(tx, &big, bx + 7.0, 4.0, 80.0, 28.0, 20.0, dark, Align::Left, false);
-        p.text(tx, &format!("/{limit:.0}fps"), bx + 7.0 + big_w + 2.0, 10.0, 80.0, 24.0, 12.0, [60, 60, 60, 220], Align::Left, false);
+        let tail = if unlimited { "fps".to_string() } else { format!("/{limit:.0}fps") };
+        let room = (90.0 - 7.0 - big_w - 4.0).max(10.0);
+        let tail_size = (12.0f32).min(room / (tx.measure(&tail, 12.0 * p.k, false) / p.k / 12.0).max(0.1));
+        p.text(tx, &tail, bx + 7.0 + big_w + 2.0, 10.0, room, 24.0, tail_size, [60, 60, 60, 220], Align::Left, false);
         p.rect(bx, 37.0, 90.0, 29.0, 4.0, ms_col);
         p.text(tx, &ms_text, bx, 37.0, 90.0, 29.0, 20.0, dark, Align::Center, false);
         for (n, (age, sev)) in spikes.iter().rev().take(9).enumerate() {

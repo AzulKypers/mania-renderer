@@ -378,10 +378,30 @@ pub const CATALOG: &[OverlayDef] = &[
     OverlayDef {
         id: "osu_fps",
         name: ["FPS and ms (osu!)", "FPS y ms (osu!)"],
-        size: (100.0, 70.0),
-        pos: (1815.0, 1006.0),
+        size: (210.0, 70.0),
+        pos: (1705.0, 1006.0),
         enabled: false,
-        options: &[],
+        options: &[
+            OptionDef {
+                key: "limit",
+                label: ["Frame limit", "Límite de fps"],
+                choices: &[
+                    ("60", ["60", "60"]),
+                    ("120", ["120", "120"]),
+                    ("144", ["144", "144"]),
+                    ("240", ["240", "240"]),
+                    ("480", ["480", "480"]),
+                    ("1000", ["1000", "1000"]),
+                ],
+                default: "240",
+            },
+            OptionDef {
+                key: "spikes",
+                label: ["Lag spikes", "Picos de lag"],
+                choices: &[("none", ["None", "Ninguno"]), ("few", ["Few", "Pocos"]), ("many", ["Many", "Muchos"])],
+                default: "few",
+            },
+        ],
     },
     OverlayDef {
         id: "nps_chart",

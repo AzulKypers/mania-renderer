@@ -280,7 +280,7 @@ impl Scene {
                 "nowplaying_disk" => self.ov_disk(&mut p, cfg, t, snap),
                 "hitcount_bar" => self.ov_hitcount_bar(&mut p, cfg, t, snap),
                 "nps_chart" => self.ov_nps(&mut p, cfg, t),
-                "osu_fps" => self.ov_osu_fps(&mut p),
+                "osu_fps" => self.ov_osu_fps(&mut p, cfg, t),
                 "mania_ingame" => {
                     let on = |k: &str| cfg.options.get(k).map(|v| v != "off").unwrap_or(true);
                     if on("hiterror") {
@@ -584,19 +584,91 @@ impl Scene {
         }
     }
 
-    fn ov_osu_fps(&self, p: &mut P) {
+    fn ov_osu_fps(&self, p: &mut P, cfg: &OverlayConfig, t: f64) {
         let tx = &self.text;
-        let fps = self.opts.fps;
-        let ms = 1000.0 / fps.max(1) as f64;
-        let ms_text = if ms < 10.0 { format!("{ms:.1}ms").replace('.', ",") } else { format!("{:.0}ms", ms) };
+        let limit: f64 = cfg.options.get("limit").and_then(|v| v.parse().ok()).unwrap_or(240.0);
+        let spike_rate = match cfg.options.get("spikes").map(String::as_str).unwrap_or("few") {
+            "none" => 0.0,
+            "many" => 1.0 / 400.0,
+            _ => 1.0 / 1800.0,
+        };
+        let base = 1000.0 / limit.max(1.0);
+        let hash = |k: i64, salt: u64| -> f64 {
+            let mut x = (k as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15) ^ salt.wrapping_mul(0xD1B5_4A32_D192_ED03);
+            x ^= x >> 31;
+            x = x.wrapping_mul(0xBF58_476D_1CE4_E5B9);
+            x ^= x >> 29;
+            (x >> 11) as f64 / (1u64 << 53) as f64
+        };
+        let frame_time = |k: i64| -> f64 {
+            let jitter = (hash(k, 1) - 0.4) * 0.16 + (hash(k / 37, 2) - 0.5) * 0.10;
+            let mut ft = base * (1.0 + jitter);
+            if hash(k, 3) < spike_rate {
+                ft = base * (1.8 + hash(k, 4) * 4.0);
+            }
+            ft.max(base * 0.85)
+        };
+        let now = ((t - self.start) / self.rate).max(0.0);
+        let k_now = (now / base) as i64;
+        let window = (3000.0 / base) as i64;
+        let mut shown = base;
+        let mut sum = 0.0;
+        let mut count = 0.0;
+        let mut spikes: Vec<(f64, f64)> = Vec::new();
+        for k in (k_now - window).max(0)..=k_now {
+            let ft = frame_time(k);
+            shown += (ft - shown) * (1.0 - (-ft / 60.0f64).exp());
+            let age = (k_now - k) as f64 * base;
+            if age <= 500.0 {
+                sum += ft;
+                count += 1.0;
+            }
+            if ft > base * 1.7 {
+                spikes.push((age, ft / base));
+            }
+        }
+        let fps = if count > 0.0 { (1000.0 / (sum / count)).round().min(limit) } else { limit };
+        let ratio = fps / limit;
+        let fps_col = if ratio >= 0.95 {
+            [155, 204, 17, 255]
+        } else if ratio >= 0.7 {
+            [255, 204, 34, 255]
+        } else if ratio >= 0.4 {
+            [255, 149, 24, 255]
+        } else {
+            [255, 70, 40, 255]
+        };
+        let rel = shown / base;
+        let ms_col = if rel <= 1.4 {
+            [164, 210, 26, 255]
+        } else if rel <= 2.2 {
+            [255, 204, 30, 255]
+        } else if rel <= 4.0 {
+            [255, 149, 24, 255]
+        } else {
+            [255, 70, 40, 255]
+        };
+        let ms_text = if shown < 10.0 { format!("{shown:.1}ms").replace('.', ",") } else { format!("{:.0}ms", shown) };
         let dark = [34, 34, 34, 255];
-        p.rect(5.0, 4.0, 90.0, 28.0, 4.0, [155, 204, 17, 255]);
-        let big = fps.to_string();
+        let bx = 115.0;
+        p.rect(bx, 4.0, 90.0, 28.0, 4.0, fps_col);
+        let big = format!("{fps:.0}");
         let big_w = tx.measure(&big, 20.0 * p.k, false) / p.k;
-        p.text(tx, &big, 12.0, 4.0, 80.0, 28.0, 20.0, dark, Align::Left, false);
-        p.text(tx, &format!("/{fps}fps"), 12.0 + big_w + 2.0, 10.0, 80.0, 24.0, 12.0, [70, 90, 20, 255], Align::Left, false);
-        p.rect(5.0, 37.0, 90.0, 29.0, 4.0, [164, 210, 26, 255]);
-        p.text(tx, &ms_text, 5.0, 37.0, 90.0, 29.0, 20.0, dark, Align::Center, false);
+        p.text(tx, &big, bx + 7.0, 4.0, 80.0, 28.0, 20.0, dark, Align::Left, false);
+        p.text(tx, &format!("/{limit:.0}fps"), bx + 7.0 + big_w + 2.0, 10.0, 80.0, 24.0, 12.0, [60, 60, 60, 220], Align::Left, false);
+        p.rect(bx, 37.0, 90.0, 29.0, 4.0, ms_col);
+        p.text(tx, &ms_text, bx, 37.0, 90.0, 29.0, 20.0, dark, Align::Center, false);
+        for (n, (age, sev)) in spikes.iter().rev().take(9).enumerate() {
+            let a = (1.0 - age / 3000.0).clamp(0.0, 1.0) as f32;
+            let c = if *sev > 4.0 {
+                [255, 50, 30]
+            } else if *sev > 2.5 {
+                [255, 110, 20]
+            } else {
+                [255, 190, 40]
+            };
+            p.rect(bx - 14.0 - n as f32 * 13.0, 54.0, 10.0, 10.0, 2.0, [c[0], c[1], c[2], (255.0 * a) as u8]);
+        }
     }
 
     fn ov_kps(&self, p: &mut P, cfg: &OverlayConfig, t: f64) {

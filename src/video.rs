@@ -555,6 +555,8 @@ pub fn export(
         "-2",
         "-b:a",
         "192k",
+        "-ar",
+        "48000",
         "-shortest",
         "-movflags",
         "+faststart",

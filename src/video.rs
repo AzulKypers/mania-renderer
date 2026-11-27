@@ -451,22 +451,32 @@ fn render_frame(scene: &Scene, index: u64, samples: u32, video: Option<&[u8]>) -
             .render_with_video(scene.time_of_frame(index as f64), video)
             .take();
     }
-    let mut sum: Vec<u16> = Vec::new();
+    let shutter = match samples {
+        0..=2 => 0.5,
+        3..=4 => 0.75,
+        _ => 1.0,
+    };
+    let sigma = 0.35f64;
+    let mut sum: Vec<f32> = Vec::new();
+    let mut total = 0.0f32;
     for s in 0..samples {
-        let offset = ((s as f64 + 0.5) / samples as f64 - 0.5) * 0.5;
-        let frame =
-            scene.render_with_video(scene.time_of_frame((index as f64 + offset).max(0.0)), video);
+        let pos = (s as f64 + 0.5) / samples as f64 - 0.5;
+        let weight = (-(pos * pos) / (2.0 * sigma * sigma)).exp() as f32;
+        let frame = scene.render_with_video(
+            scene.time_of_frame((index as f64 + pos * shutter).max(0.0)),
+            video,
+        );
         let data = frame.data();
         if sum.is_empty() {
-            sum = data.iter().map(|&v| v as u16).collect();
-        } else {
-            for (a, b) in sum.iter_mut().zip(data) {
-                *a += *b as u16;
-            }
+            sum = vec![0.0; data.len()];
         }
+        for (a, b) in sum.iter_mut().zip(data) {
+            *a += *b as f32 * weight;
+        }
+        total += weight;
     }
     sum.into_iter()
-        .map(|v| ((v as u32 + samples / 2) / samples) as u8)
+        .map(|v| (v / total + 0.5).min(255.0) as u8)
         .collect()
 }
 

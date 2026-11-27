@@ -659,10 +659,10 @@ impl App {
             out_dir: PathBuf::from(self.s.out_dir.trim()),
             encoder: self.encoder(),
             frame_samples: if self.s.smooth {
-                if self.s.smooth_level == 1 {
-                    4
-                } else {
-                    2
+                match self.s.smooth_level {
+                    1 => 4,
+                    2 => 8,
+                    _ => 2,
                 }
             } else {
                 1
@@ -1824,8 +1824,8 @@ impl App {
             egui::UiBuilder::new().max_rect(r(720.0, 479.0, 212.0, 24.0)),
             |ui| {
                 ui.add_enabled_ui(enabled && self.s.smooth, |ui| {
-                    let opts = [self.t("smooth_2"), self.t("smooth_4")];
-                    let mut idx = self.s.smooth_level.min(1);
+                    let opts = [self.t("smooth_2"), self.t("smooth_4"), self.t("smooth_8")];
+                    let mut idx = self.s.smooth_level.min(2);
                     egui::ComboBox::from_id_salt("smooth")
                         .width(208.0)
                         .selected_text(opts[idx].clone())

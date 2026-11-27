@@ -134,7 +134,8 @@
     "fps_tip": "Frames per second of the video. 60 works on every player (also YouTube). For the smoothest result on any PC use 60 fps + \"Smooth motion\" (4 frames): it renders like 240 fps but stays a normal 60 fps file. 120 fps or more only plays well on high-refresh monitors with a player that supports it; many players lose audio sync with very high fps.",
     "show_fps": "Show FPS and ms",
     "map_hs_vol": "Map hitsounds",
-    "skin_hs_vol": "Skin sounds"
+    "skin_hs_vol": "Skin sounds",
+    "smooth_8": "8 frames, any monitor (8x export time)"
   },
   "es": {
     "language": "Idioma",
@@ -271,6 +272,7 @@
     "fps_tip": "Cuadros por segundo del video. 60 funciona en todos los reproductores (y en YouTube). Para lo más fluido en cualquier PC usa 60 fps + \"Movimiento suave\" (4 cuadros): se dibuja como 240 fps pero queda un archivo normal de 60 fps. 120 fps o más solo se ve bien en monitores de alta frecuencia con un reproductor que lo soporte; muchos reproductores pierden la sincronía del audio con fps muy altos.",
     "show_fps": "Mostrar FPS y ms",
     "map_hs_vol": "Hitsounds mapa",
-    "skin_hs_vol": "Sonido skin"
+    "skin_hs_vol": "Sonido skin",
+    "smooth_8": "8 cuadros, cualquier monitor (tarda 8 veces más)"
   }
 }

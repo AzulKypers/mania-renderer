@@ -135,7 +135,7 @@
     "show_fps": "Show FPS and ms",
     "map_hs_vol": "Map hitsounds",
     "skin_hs_vol": "Skin sounds",
-    "smooth_8": "8 frames, any monitor (8x export time)"
+    "smooth_8": "8 frames (8x export time)"
   },
   "es": {
     "language": "Idioma",
@@ -273,6 +273,6 @@
     "show_fps": "Mostrar FPS y ms",
     "map_hs_vol": "Hitsounds mapa",
     "skin_hs_vol": "Sonido skin",
-    "smooth_8": "8 cuadros, cualquier monitor (tarda 8 veces más)"
+    "smooth_8": "8 cuadros (tarda 8 veces más)"
   }
 }

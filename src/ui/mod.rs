@@ -1827,7 +1827,8 @@ impl App {
                     let opts = [self.t("smooth_2"), self.t("smooth_4"), self.t("smooth_8")];
                     let mut idx = self.s.smooth_level.min(2);
                     egui::ComboBox::from_id_salt("smooth")
-                        .width(208.0)
+                        .width(204.0)
+                        .truncate()
                         .selected_text(opts[idx].clone())
                         .show_ui(ui, |ui| {
                             for (i, o) in opts.iter().enumerate() {
